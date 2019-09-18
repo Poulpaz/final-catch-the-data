@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Picker, ScrollView } from "react-native";
+import { View, Picker, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 
 import { Appbar, Button, Card, TextInput } from "react-native-paper";
 
@@ -25,11 +25,14 @@ export default class HomePage extends React.Component {
 
   render() {
     return (
-      <ScrollView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
         <Appbar.Header>
           <Appbar.Content title="Accueil" subtitle="Lancer une activité" />
         </Appbar.Header>
-        <View>
+        <ScrollView>
           <Card style={homeStyles.homeCard}>
             <Card.Title
               title="Position"
@@ -99,8 +102,8 @@ export default class HomePage extends React.Component {
               Sauvegarder
             </Button>
           </Card>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 }

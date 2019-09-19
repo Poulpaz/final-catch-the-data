@@ -1,5 +1,21 @@
 import { StyleSheet, Dimensions } from "react-native";
 
+const timerStyles = {
+  container: {
+    backgroundColor: "none",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  text: {
+    color: "#000",
+    fontWeight: "bold",
+    fontSize: Dimensions.get("screen").width / 10
+  }
+};
+
+export { timerStyles };
+
 export default ActivityPageStyles = StyleSheet.create({
   container: {
     flex: 1,

@@ -11,7 +11,9 @@ import Buttons from "../Components/ButtonsActivity";
 import CardData from "../Components/CardDataActivity";
 import DialogInput from "../Components/DialogInputActivity";
 
-import styles from "../Styles/ActivityPageStyles";
+import { Stopwatch } from "react-native-stopwatch-timer";
+
+import styles, { timerStyles } from "../Styles/ActivityPageStyles";
 
 export default class ActivityPage extends React.Component {
   constructor(props) {
@@ -34,13 +36,13 @@ export default class ActivityPage extends React.Component {
       latitude: 0.0,
       longitude: 0.0,
       routeCoordinates: [],
-      distanceTravelled: 0.0,
+      distanceTravelled: 0,
       prevDistanceTravelled: 0,
       denivele: 0,
       prevLatLng: {},
-      power: 0.0,
-      altitude: 0.0,
-      prevAltitude: 0.0,
+      power: 0,
+      altitude: 0,
+      prevAltitude: 0,
       speed: -1,
       startTime: 0,
       endTime: 0,
@@ -63,10 +65,33 @@ export default class ActivityPage extends React.Component {
   }
 
   //Play button
-  _onPressPlayButton() {}
+  _onPressPlayButton() {
+    this.setState({
+      onPlay: true,
+      canStop: true,
+      stopwatchStart: !this.state.stopwatchStart,
+      stopwatchReset: false,
+      distanceTravelled: 0,
+      denivele: 0,
+      power: 0,
+      speed: 0,
+      prevLatLng: {}
+    });
+  }
 
   //Stop button
-  _onPressStopButton() {}
+  _onPressStopButton() {
+    this.setState({
+      stopwatchStart: !this.state.stopwatchStart,
+      onPlay: false,
+      canStop: false
+    });
+  }
+
+  //Render formated time for Stopwatch
+  getFormattedTime(time) {
+    this.currentTime = time;
+  }
 
   render() {
     return (
@@ -81,7 +106,13 @@ export default class ActivityPage extends React.Component {
           <View style={styles.dataRowView}>
             <View style={styles.dataColumnView}>
               <Card style={styles.activityCard}>
-                <Text>TIMER - STOPWATCH</Text>
+                <Stopwatch
+                  secs
+                  start={this.state.stopwatchStart}
+                  reset={this.state.stopwatchReset}
+                  options={timerStyles}
+                  getTime={this.getFormattedTime}
+                />
               </Card>
             </View>
           </View>

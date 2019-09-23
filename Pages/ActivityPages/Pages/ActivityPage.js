@@ -14,7 +14,13 @@ import DialogInput from "../Components/DialogInputActivity";
 import { Stopwatch } from "react-native-stopwatch-timer";
 import haversine from "haversine";
 
+import ActivityModel from "../../../Storage/ActivityModel";
+
 import styles, { timerStyles } from "../Styles/ActivityPageStyles";
+
+const activity = {
+  title: "Activité en cours..."
+};
 
 export default class ActivityPage extends React.Component {
   constructor(props) {
@@ -132,6 +138,13 @@ export default class ActivityPage extends React.Component {
       ).toFixed(0),
       prevLatLng: {}
     });
+
+    ActivityModel.create(activity).then(res =>
+      this.setState({
+        idActivity: res.id
+      })
+    );
+
     this.setIntervalComponents();
   }
 
@@ -178,7 +191,17 @@ export default class ActivityPage extends React.Component {
               stopwatchStart: !this.state.stopwatchStart,
               isDialogVisible: false
             });
-            var totalTime = this.state.endTime - this.state.startTime;
+            //var totalTime = this.state.endTime - this.state.startTime;
+
+            const activityEdit = {
+              id: this.state.idActivity,
+              title: inputText
+            };
+            try {
+              ActivityModel.update(activityEdit);
+            } catch (error) {
+              console.log(error);
+            }
           }}
           close={() => {
             this.setState({

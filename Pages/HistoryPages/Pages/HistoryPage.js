@@ -9,7 +9,15 @@ import {
 } from "react-native";
 import { Appbar, Button, List, Card } from "react-native-paper";
 
+import ActivityModel from "../../../Storage/ActivityModel";
+
 import styles from "../Styles/HistoryPageStyles";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+
+const activities = {
+  columns: "id, title",
+  order: "id DESC"
+};
 
 export default class HistoryPage extends React.Component {
   constructor(props) {
@@ -21,16 +29,35 @@ export default class HistoryPage extends React.Component {
   }
 
   componentDidMount() {
-    console.log(this.state);
+    this._loadActivities();
   }
 
-  componentDidUpdate() {
-    console.log(this.state);
-  }
+  componentWillUnmount() {}
 
-  componentWillUnmount() {
-    console.log(this.state);
-  }
+  _onRefresh = () => {
+    this.setState({ refreshing: true });
+    this._loadActivities().then(() => {
+      this.setState({ refreshing: false });
+    });
+  };
+
+  _loadActivities = () => {
+    return ActivityModel.query(activities)
+      .then(res => {
+        this.setState({
+          activities: res
+        });
+      })
+      .catch((error, res) => {
+        console.log(error);
+        console.log(res);
+      });
+  };
+
+  _removeActivity = id => {
+    ActivityModel.destroy(id);
+    this._loadActivities();
+  };
 
   render() {
     return (
@@ -52,13 +79,48 @@ export default class HistoryPage extends React.Component {
           refreshControl={
             <RefreshControl
               refreshing={this.state.refreshing}
-              onRefresh={console.log("REFRESHING")}
+              onRefresh={this._onRefresh}
             />
           }
         >
           <Card style={styles.historyListCard}>
             <List.Section>
-              <List.Item title="Aucune activité enregistrée." />
+              {this.state.activities && this.state.activities.length ? (
+                this.state.activities.map(item => (
+                  <List.Item
+                    key={item.id}
+                    title={item.title}
+                    description={"Voir en détails"}
+                    onPress={() =>
+                      /*navigate("ItemDetails", {
+                        idActivity: item.id
+                      })*/
+                      console.log("DETAILS")
+                    }
+                    onLongPress={() =>
+                      Alert.alert(
+                        "Supprimer",
+                        "Voulez-vous vraiment supprimer cette activité ?",
+                        [
+                          {
+                            text: "Annuler",
+                            onPress: () => null,
+                            style: "cancel"
+                          },
+                          {
+                            text: "OK",
+                            onPress: () => this._removeActivity(item.id)
+                          }
+                        ],
+                        { cancelable: true }
+                      )
+                    }
+                    left={props => <List.Icon {...props} icon="check" />}
+                  />
+                ))
+              ) : (
+                <List.Item title="Aucune activité enregistrée." />
+              )}
             </List.Section>
           </Card>
         </ScrollView>

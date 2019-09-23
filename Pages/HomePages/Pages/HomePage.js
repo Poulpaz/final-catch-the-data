@@ -25,8 +25,8 @@ export default class HomePage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      settings: [],
-      idHomeSettings: null,
+      homeData: [],
+      idHomeData: null,
       position: 0.0,
       roadState: 0.0,
       temperature: 0
@@ -34,43 +34,43 @@ export default class HomePage extends React.Component {
   }
 
   componentDidMount() {
-    this._loadHomeSettings();
+    this._loadHomeData();
   }
 
   componentDidUpdate() {
     //console.log(this.state);
   }
 
-  _loadHomeSettings = () => {
+  _loadHomeData = () => {
     return HomeDataModel.query(homeData)
       .then(res => {
         this.setState({
-          settings: res
+          homeData: res
         }),
-          this.state.settings.map(item =>
+          this.state.homeData.map(item =>
             this.setState({
-              idHomeSettings: item.id,
+              idHomeData: item.id,
               position: item.position,
               roadState: item.roadState,
               temperature: item.temperature
             })
           ),
-          console.log(this.state);
+          console.log(res);
       })
       .catch(error => {
         console.log(error);
       });
   };
 
-  _saveHomeSettings = () => {
+  _saveHomeData = () => {
     if (this.state.settings && this.state.settings.length > 0) {
       const homeDataEdit = {
-        id: this.state.idHomeSettings,
+        id: this.state.idHomeData,
         position: parseFloat(this.state.position).toFixed(2),
         roadState: parseFloat(this.state.roadState).toFixed(4),
         temperature: parseInt(this.state.temperature)
       };
-      HomeDataModel.update(homeDataEdit).then(this._loadHomeSettings());
+      HomeDataModel.update(homeDataEdit).then(this._loadHomeData());
     } else {
       const homeDataNew = {
         position: parseFloat(this.state.position).toFixed(2),
@@ -78,8 +78,8 @@ export default class HomePage extends React.Component {
         temperature: parseInt(this.state.temperature)
       };
       HomeDataModel.create(homeDataNew)
-        .then(res => this.setState({ idHomeSettings: res.id }))
-        .then(this._loadHomeSettings());
+        .then(res => this.setState({ idHomeData: res.id }))
+        .then(this._loadHomeData());
     }
     ToastAndroid.show("Données enregistrées avec succès", ToastAndroid.SHORT);
   };
@@ -158,7 +158,7 @@ export default class HomePage extends React.Component {
             <Button
               icon="check"
               mode="contained"
-              onPress={() => this._saveHomeSettings()}
+              onPress={() => this._saveHomeData()}
             >
               Sauvegarder
             </Button>

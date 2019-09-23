@@ -4,7 +4,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  View
+  View,
+  ToastAndroid
 } from "react-native";
 import { Appbar, Card, Button, TextInput } from "react-native-paper";
 import DatePicker from "react-native-datepicker";
@@ -12,10 +13,22 @@ import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 import styles from "../Styles/SettingsPageStyles";
 
+import SettingsDataModel from "../../../Storage/SettingsDataModel";
+
+const settingsData = {
+  columns:
+    "id, firstname, lastname, birthDate, friction, height, weight, fullWeight",
+  page: 1,
+  limit: 1,
+  order: "id DESC"
+};
+
 export default class SettingsPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      settingsData: [],
+      idSettingsData: null,
       firstname: "",
       lastname: "",
       birthDate: "",
@@ -27,12 +40,67 @@ export default class SettingsPage extends React.Component {
   }
 
   componentDidMount() {
-    console.log(this.state);
+    this._loadSettingsData();
   }
 
   componentDidUpdate() {
-    console.log(this.state);
+    //console.log(this.state);
   }
+
+  _loadSettingsData = () => {
+    return SettingsDataModel.query(settingsData)
+      .then(res => {
+        this.setState({
+          settingsData: res
+        }),
+          this.state.settingsData.map(item =>
+            this.setState({
+              idSettingsData: item.id,
+              firstname: item.firstname,
+              lastname: item.lastname,
+              birthDate: item.birthDate,
+              friction: item.friction,
+              height: item.height,
+              weight: item.weight,
+              fullWeight: item.fullWeight
+            })
+          ),
+          console.log(res);
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
+
+  _saveSettingsData = () => {
+    if (this.state.settingsData && this.state.settingsData.length > 0) {
+      const settingsDataEdit = {
+        id: this.state.idSettingsData,
+        firstname: this.state.firstname,
+        lastname: this.state.lastname,
+        birthDate: this.state.birthDate,
+        friction: this.state.friction,
+        height: this.state.height,
+        weight: this.state.weight,
+        fullWeight: this.state.fullWeight
+      };
+      SettingsDataModel.update(settingsDataEdit).then(this._loadSettingsData());
+    } else {
+      const settingsDataNew = {
+        firstname: this.state.firstname,
+        lastname: this.state.lastname,
+        birthDate: this.state.birthDate,
+        friction: this.state.friction,
+        height: this.state.height,
+        weight: this.state.weight,
+        fullWeight: this.state.fullWeight
+      };
+      SettingsDataModel.create(settingsDataNew)
+        .then(res => this.setState({ idSettingsData: res.id }))
+        .then(this._loadSettingsData());
+    }
+    ToastAndroid.show("Données enregistrées avec succès", ToastAndroid.SHORT);
+  };
 
   render() {
     return (
@@ -98,7 +166,7 @@ export default class SettingsPage extends React.Component {
             />
             <Card.Content>
               <Picker
-                selectedValue={this.state.friction}
+                selectedValue={String(this.state.friction)}
                 onValueChange={(itemValue, itemIndex) =>
                   this.setState({
                     friction: itemValue
@@ -169,7 +237,7 @@ export default class SettingsPage extends React.Component {
             <Button
               icon="check"
               mode="contained"
-              onPress={() => console.log("PRESSED !")}
+              onPress={() => this._saveSettingsData()}
             >
               Sauvegarder
             </Button>

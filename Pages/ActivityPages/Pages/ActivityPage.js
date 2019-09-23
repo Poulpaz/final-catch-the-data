@@ -12,6 +12,7 @@ import CardData from "../Components/CardDataActivity";
 import DialogInput from "../Components/DialogInputActivity";
 
 import { Stopwatch } from "react-native-stopwatch-timer";
+import haversine from "haversine";
 
 import styles, { timerStyles } from "../Styles/ActivityPageStyles";
 
@@ -53,15 +54,65 @@ export default class ActivityPage extends React.Component {
   }
 
   componentDidMount() {
-    console.log(this.state);
+    this._intervalAltitudeSpeed = setInterval(() => {
+      this.watchID = navigator.geolocation.getCurrentPosition(
+        pos => {
+          const { altitude, speed } = pos.coords;
+          this.setState({
+            altitude,
+            speed
+          });
+        },
+        error => console.log(error),
+        {
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 1000,
+          distanceFilter: 10
+        }
+      );
+    }, 3000);
   }
+
+  setIntervalComponents = () => {
+    //Calculate distance when geolocalisation change every 3s
+    this.watchID = this._intervalDistance = setInterval(() => {
+      navigator.geolocation.watchPosition(
+        pos => {
+          const { routeCoordinates, distanceTravelled } = this.state;
+          const { latitude, longitude } = pos.coords;
+          const newCoordinate = {
+            latitude,
+            longitude
+          };
+          this.setState({
+            latitude,
+            longitude,
+            routeCoordinates: routeCoordinates.concat([newCoordinate]),
+            distanceTravelled:
+              distanceTravelled + this.calcDistance(newCoordinate),
+            prevLatLng: newCoordinate
+          });
+        },
+        error => console.log(error),
+        {
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 1000,
+          distanceFilter: 10
+        }
+      );
+    }, 3000);
+  };
 
   componentDidUpdate() {
     console.log(this.state);
   }
 
   componentWillUnmount() {
-    console.log(this.state);
+    navigator.geolocation.clearWatch(this.watchID);
+    clearInterval(this._intervalAltitudeSpeed);
+    clearInterval(this._intervalDistance);
   }
 
   //Play button
@@ -74,24 +125,39 @@ export default class ActivityPage extends React.Component {
       distanceTravelled: 0,
       denivele: 0,
       power: 0,
-      speed: 0,
+      startTime: parseInt(
+        new Date().getHours() * 3600 +
+          new Date().getMinutes() * 60 +
+          new Date().getSeconds()
+      ).toFixed(0),
       prevLatLng: {}
     });
+    this.setIntervalComponents();
   }
 
   //Stop button
   _onPressStopButton() {
     this.setState({
-      stopwatchStart: !this.state.stopwatchStart,
-      onPlay: false,
-      canStop: false
+      isDialogVisible: true,
+      endTime: parseInt(
+        new Date().getHours() * 3600 +
+          new Date().getMinutes() * 60 +
+          new Date().getSeconds()
+      ).toFixed(0)
     });
+    clearInterval(this._intervalDistance);
   }
 
   //Render formated time for Stopwatch
   getFormattedTime(time) {
     this.currentTime = time;
   }
+
+  //Calulate distance with haversine formula
+  calcDistance = newLatLng => {
+    const { prevLatLng } = this.state;
+    return haversine(prevLatLng, newLatLng) || 0;
+  };
 
   render() {
     return (
@@ -102,6 +168,26 @@ export default class ActivityPage extends React.Component {
         <Appbar.Header>
           <Appbar.Content title="Activité" subtitle="Suivre son activité" />
         </Appbar.Header>
+        <DialogInput
+          visibility={this.state.isDialogVisible}
+          submit={inputText => {
+            this.setState({
+              onPlay: false,
+              canStop: false,
+              stopwatchReset: true,
+              stopwatchStart: !this.state.stopwatchStart,
+              isDialogVisible: false
+            });
+            var totalTime = this.state.endTime - this.state.startTime;
+          }}
+          close={() => {
+            this.setState({
+              isDialogVisible: false,
+              stopwatchStart: !this.state.stopwatchStart
+            });
+            this.setIntervalComponents();
+          }}
+        />
         <ScrollView>
           <View style={styles.dataRowView}>
             <View style={styles.dataColumnView}>

@@ -1,18 +1,16 @@
 import React from "react";
 import {
   ScrollView,
-  View,
   Alert,
   RefreshControl,
   KeyboardAvoidingView,
   Platform
 } from "react-native";
-import { Appbar, Button, List, Card } from "react-native-paper";
+import { Appbar, List, Card } from "react-native-paper";
 
 import ActivityModel from "../../../Storage/ActivityModel";
 
 import styles from "../Styles/HistoryPageStyles";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 const activities = {
   columns: "id, title",
@@ -20,6 +18,10 @@ const activities = {
 };
 
 export default class HistoryPage extends React.Component {
+  static navigationOptions = {
+    header: null
+  };
+
   constructor(props) {
     super(props);
     this.state = {
@@ -60,6 +62,7 @@ export default class HistoryPage extends React.Component {
   };
 
   render() {
+    const { navigate } = this.props.navigation;
     return (
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -92,10 +95,9 @@ export default class HistoryPage extends React.Component {
                     title={item.title}
                     description={"Voir en détails"}
                     onPress={() =>
-                      /*navigate("ItemDetails", {
+                      navigate("Details", {
                         idActivity: item.id
-                      })*/
-                      console.log("DETAILS")
+                      })
                     }
                     onLongPress={() =>
                       Alert.alert(

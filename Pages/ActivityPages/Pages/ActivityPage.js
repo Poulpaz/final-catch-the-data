@@ -17,6 +17,10 @@ import haversine from "haversine";
 import ActivityModel from "../../../Storage/ActivityModel";
 import HomeDataModel from "../../../Storage/HomeDataModel";
 import SettingsDataModel from "../../../Storage/SettingsDataModel";
+import AltitudeDotModel from "../../../Storage/AltitudeDotModel";
+import DistanceDotModel from "../../../Storage/DistanceDotModel";
+import PowerDotModel from "../../../Storage/PowerDotModel";
+import SpeedDotModel from "../../../Storage/SpeedDotModel";
 
 import styles, { timerStyles } from "../Styles/ActivityPageStyles";
 
@@ -142,6 +146,44 @@ export default class ActivityPage extends React.Component {
       this._calcPowerFormula();
       this._calcDeniveleFormula();
     }, 3000);
+
+    //Save each dot in database every 3s
+    this._intervalSaveDataBase = setInterval(() => {
+      const distanceDot = {
+        distance: parseFloat(this.state.distanceTravelled).toFixed(3),
+        idActivity: this.state.idActivity
+      };
+
+      const altitudeDot = {
+        altitude: parseFloat(this.state.altitude).toFixed(1),
+        idActivity: this.state.idActivity
+      };
+
+      const speedDot = {
+        speed: parseFloat(this.state.speed * 4).toFixed(1),
+        idActivity: this.state.idActivity
+      };
+
+      const powerDot = {
+        power: parseFloat(this.state.power).toFixed(1),
+        idActivity: this.state.idActivity
+      };
+
+      DistanceDotModel.create(distanceDot).then(res => {
+        this.setState({
+          prevDistanceTravelled: res.distance
+        });
+      });
+
+      AltitudeDotModel.create(altitudeDot).then(res => {
+        this.setState({
+          prevAltitude: res.altitude
+        });
+      });
+
+      PowerDotModel.create(powerDot);
+      SpeedDotModel.create(speedDot);
+    }, 3000);
   };
 
   componentDidUpdate() {
@@ -153,6 +195,7 @@ export default class ActivityPage extends React.Component {
     clearInterval(this._intervalAltitudeSpeed);
     clearInterval(this._intervalDistance);
     clearInterval(this._intervalPowerDenivele);
+    clearInterval(this._intervalSaveDataBase);
   }
 
   //Play button
@@ -210,7 +253,6 @@ export default class ActivityPage extends React.Component {
           new Date().getSeconds()
       ).toFixed(0)
     });
-    clearInterval(this._intervalDistance);
   }
 
   //Render formated time for Stopwatch
@@ -360,13 +402,24 @@ export default class ActivityPage extends React.Component {
               canStop: false,
               stopwatchReset: true,
               stopwatchStart: !this.state.stopwatchStart,
-              isDialogVisible: false
+              isDialogVisible: false,
+              distanceTravelled: 0,
+              power: 0
             });
-            //var totalTime = this.state.endTime - this.state.startTime;
-
+            clearInterval(this._intervalDistance);
+            clearInterval(this._intervalPowerDenivele);
+            clearInterval(this._intervalSaveDataBase);
+            var totalTime = this.state.endTime - this.state.startTime;
             const activityEdit = {
               id: this.state.idActivity,
-              title: inputText
+              title: inputText,
+              distanceTravelled: parseFloat(
+                this.state.distanceTravelled
+              ).toFixed(3),
+              denivele: parseInt(this.state.denivele).toFixed(0),
+              height: this.state.height,
+              weight: this.state.weight,
+              time: parseInt(totalTime).toFixed(0)
             };
             try {
               ActivityModel.update(activityEdit);
@@ -376,10 +429,8 @@ export default class ActivityPage extends React.Component {
           }}
           close={() => {
             this.setState({
-              isDialogVisible: false,
-              stopwatchStart: !this.state.stopwatchStart
+              isDialogVisible: false
             });
-            this.setIntervalComponents();
           }}
         />
         <ScrollView>

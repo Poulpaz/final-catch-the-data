@@ -40,7 +40,10 @@ export default class HistoryItem extends React.Component {
   }
 
   _onRefresh = () => {
-    this._loadItemDetails();
+    this.setState({ refreshing: true });
+    this._loadItemDetails().then(() => {
+      this.setState({ refreshing: false });
+    });
   };
 
   componentDidMount() {
@@ -150,7 +153,14 @@ export default class HistoryItem extends React.Component {
     var totalTimeHours = parseInt(timeInSeconds / 3600).toFixed(0);
     var totalTimeMinutes = parseInt((timeInSeconds % 3600) / 60).toFixed(0);
     var totalTimeSeconds = parseInt((timeInSeconds % 3600) % 60).toFixed(0);
-    return (totalTimeHours + " h " + totalTimeMinutes + " min " + totalTimeSeconds + " s");
+    return (
+      totalTimeHours +
+      " h " +
+      totalTimeMinutes +
+      " min " +
+      totalTimeSeconds +
+      " s"
+    );
   };
 
   render() {
@@ -161,6 +171,7 @@ export default class HistoryItem extends React.Component {
 
     const axesSvg = { fontSize: 10, fill: "grey" };
     const verticalContentInset = { top: 10, bottom: 10 };
+    const svgLineChart = { stroke: "tomato", strokeWidth: 2 };
 
     return (
       <KeyboardAvoidingView
@@ -182,7 +193,9 @@ export default class HistoryItem extends React.Component {
           <Card style={styles.historyItemCard}>
             <Card.Title
               title="Temps de l'activité"
-              subtitle={this._getTimeToString(parseInt(this.state.activity.time).toFixed(0))}
+              subtitle={this._getTimeToString(
+                parseInt(this.state.activity.time).toFixed(0)
+              )}
             />
           </Card>
           <Card style={styles.historyItemCard}>
@@ -227,7 +240,7 @@ export default class HistoryItem extends React.Component {
                   style={styles.lineChart}
                   data={dataAltitudeDots}
                   contentInset={verticalContentInset}
-                  svg={{ stroke: "rgb(134, 65, 244)" }}
+                  svg={svgLineChart}
                 >
                   <Grid />
                 </LineChart>
@@ -247,7 +260,7 @@ export default class HistoryItem extends React.Component {
                   style={styles.lineChart}
                   data={dataPowerDots}
                   contentInset={verticalContentInset}
-                  svg={{ stroke: "rgb(134, 65, 244)" }}
+                  svg={svgLineChart}
                 >
                   <Grid />
                 </LineChart>
@@ -267,7 +280,7 @@ export default class HistoryItem extends React.Component {
                   style={styles.lineChart}
                   data={dataSpeedDots}
                   contentInset={verticalContentInset}
-                  svg={{ stroke: "rgb(134, 65, 244)" }}
+                  svg={svgLineChart}
                 >
                   <Grid />
                 </LineChart>

@@ -9,12 +9,14 @@ import HomePage from "../Pages/HomePages/Pages/HomePage";
 import ActivityPage from "../Pages/ActivityPages/Pages/ActivityPage";
 import HistoryPage from "../Pages/HistoryPages/Pages/HistoryPage";
 import HistoryItem from "../Pages/HistoryPages/Pages/HistoryItem";
+import AllHistory from "../Pages/HistoryPages/Pages/AllHistory";
 import SettingsPage from "../Pages/SettingsPages/Pages/SettingsPage";
 
 const HistoryStack = createStackNavigator(
   {
     Historique: HistoryPage,
-    Details: HistoryItem
+    Details: HistoryItem,
+    AllHistory: AllHistory
   },
   {
     initialRouteName: "Historique"

@@ -1,5 +1,6 @@
 import React from "react";
 import { createBottomTabNavigator } from "react-navigation-tabs";
+import { createStackNavigator } from "react-navigation-stack";
 import { createAppContainer } from "react-navigation";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
@@ -7,13 +8,34 @@ import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import HomePage from "../Pages/HomePages/Pages/HomePage";
 import ActivityPage from "../Pages/ActivityPages/Pages/ActivityPage";
 import HistoryPage from "../Pages/HistoryPages/Pages/HistoryPage";
+import HistoryItem from "../Pages/HistoryPages/Pages/HistoryItem";
 import SettingsPage from "../Pages/SettingsPages/Pages/SettingsPage";
+
+const HistoryStack = createStackNavigator(
+  {
+    Historique: HistoryPage,
+    Details: HistoryItem
+  },
+  {
+    initialRouteName: "Historique"
+  }
+);
+
+HistoryStack.navigationOptions = ({ navigation }) => {
+  let tabBarVisible = true;
+  if (navigation.state.index > 0) {
+    tabBarVisible = false;
+  }
+  return {
+    tabBarVisible
+  };
+};
 
 const TabNavigator = createBottomTabNavigator(
   {
     Accueil: HomePage,
     Activité: ActivityPage,
-    Historique: HistoryPage,
+    Historique: HistoryStack,
     Paramètres: SettingsPage
   },
   {

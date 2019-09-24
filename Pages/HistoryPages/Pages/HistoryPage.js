@@ -75,7 +75,7 @@ export default class HistoryPage extends React.Component {
           />
           <Appbar.Action
             icon="apps"
-            onPress={() => console.log("GO TO ALL HISTORY")}
+            onPress={() => navigate('AllHistory')}
           />
         </Appbar.Header>
         <ScrollView

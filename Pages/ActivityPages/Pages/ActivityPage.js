@@ -1,10 +1,10 @@
 import React from "react";
 import {
   ScrollView,
-  Text,
   KeyboardAvoidingView,
   View,
-  Platform
+  Platform,
+  ToastAndroid
 } from "react-native";
 import { Appbar, Card } from "react-native-paper";
 import Buttons from "../Components/ButtonsActivity";
@@ -15,6 +15,8 @@ import { Stopwatch } from "react-native-stopwatch-timer";
 import haversine from "haversine";
 
 import ActivityModel from "../../../Storage/ActivityModel";
+import HomeDataModel from "../../../Storage/HomeDataModel";
+import SettingsDataModel from "../../../Storage/SettingsDataModel";
 
 import styles, { timerStyles } from "../Styles/ActivityPageStyles";
 
@@ -22,37 +24,58 @@ const activity = {
   title: "Activité en cours..."
 };
 
+const homeData = {
+  columns: "id, position, roadState, temperature",
+  page: 1,
+  limit: 1,
+  order: "id DESC"
+};
+
+const settingsData = {
+  columns: "id, friction, height, weight, fullWeight",
+  page: 1,
+  limit: 1,
+  order: "id DESC"
+};
+
 export default class ActivityPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       idActivity: 0,
-      settingsHome: [],
-      settingsUser: [],
-      temperature: 0,
+      //data
+      homeData: [],
+      settingsData: [],
+      //from home screen
       scx: 0,
+      cr: 0,
+      temperature: 0,
+      //from settings screen
+      friction: 0,
       height: 0,
       weight: 0,
       fullWeight: 0,
-      cr: 0,
-      friction: 0,
+      //controls for stopwatch
       onPlay: false,
       canStop: false,
       stopwatchStart: false,
       stopwatchReset: false,
+      //coordinates and values on activity screen
       latitude: 0.0,
       longitude: 0.0,
       routeCoordinates: [],
+      prevLatLng: {},
       distanceTravelled: 0,
       prevDistanceTravelled: 0,
       denivele: 0,
-      prevLatLng: {},
       power: 0,
       altitude: 0,
       prevAltitude: 0,
       speed: -1,
+      //time
       startTime: 0,
       endTime: 0,
+      //dialog
       isDialogVisible: false
     };
     this._onPressPlayButton = this._onPressPlayButton.bind(this);
@@ -112,7 +135,7 @@ export default class ActivityPage extends React.Component {
   };
 
   componentDidUpdate() {
-    console.log(this.state);
+    //console.log(this.state);
   }
 
   componentWillUnmount() {
@@ -123,29 +146,47 @@ export default class ActivityPage extends React.Component {
 
   //Play button
   _onPressPlayButton() {
-    this.setState({
-      onPlay: true,
-      canStop: true,
-      stopwatchStart: !this.state.stopwatchStart,
-      stopwatchReset: false,
-      distanceTravelled: 0,
-      denivele: 0,
-      power: 0,
-      startTime: parseInt(
-        new Date().getHours() * 3600 +
-          new Date().getMinutes() * 60 +
-          new Date().getSeconds()
-      ).toFixed(0),
-      prevLatLng: {}
-    });
+    ToastAndroid.show("Vérification des données...", ToastAndroid.SHORT);
+    this._loadAllData();
+    setTimeout(() => {
+      var state = this.state;
+      if (
+        state.scx !== 0 &&
+        state.cr !== 0 &&
+        state.temperature !== 0 &&
+        state.friction !== 0 &&
+        state.fullWeight !== 0
+      ) {
+        this.setState({
+          onPlay: true,
+          canStop: true,
+          stopwatchStart: !this.state.stopwatchStart,
+          stopwatchReset: false,
+          distanceTravelled: 0,
+          denivele: 0,
+          power: 0,
+          startTime: parseInt(
+            new Date().getHours() * 3600 +
+              new Date().getMinutes() * 60 +
+              new Date().getSeconds()
+          ).toFixed(0),
+          prevLatLng: {}
+        });
 
-    ActivityModel.create(activity).then(res =>
-      this.setState({
-        idActivity: res.id
-      })
-    );
+        ActivityModel.create(activity).then(res =>
+          this.setState({
+            idActivity: res.id
+          })
+        );
 
-    this.setIntervalComponents();
+        this.setIntervalComponents();
+      } else {
+        ToastAndroid.show(
+          "Veuillez vérifier les données saisies.",
+          ToastAndroid.LONG
+        );
+      }
+    }, 2000);
   }
 
   //Stop button
@@ -170,6 +211,56 @@ export default class ActivityPage extends React.Component {
   calcDistance = newLatLng => {
     const { prevLatLng } = this.state;
     return haversine(prevLatLng, newLatLng) || 0;
+  };
+
+  //Get all settings
+  _loadAllData() {
+    this._loadHomeData();
+    this._loadSettingsData();
+    console.log(this.state.homeData);
+  }
+
+  //Get settings from Home Screen
+  _loadHomeData = () => {
+    return HomeDataModel.query(homeData)
+      .then(res => {
+        this.setState({
+          homeData: res
+        }),
+          this.state.homeData.map(item =>
+            this.setState({
+              scx: item.position,
+              cr: item.roadState,
+              temperature: item.temperature
+            })
+          );
+      })
+      .catch((error, res) => {
+        console.log(error);
+        console.log(res);
+      });
+  };
+
+  //Get settings from Settings Screen
+  _loadSettingsData = () => {
+    return SettingsDataModel.query(settingsData)
+      .then(res => {
+        this.setState({
+          settingsData: res
+        }),
+          this.state.settingsData.map(item =>
+            this.setState({
+              friction: item.friction,
+              height: item.height,
+              weight: item.weight,
+              fullWeight: item.fullWeight
+            })
+          );
+      })
+      .catch((error, res) => {
+        console.log(error);
+        console.log(res);
+      });
   };
 
   render() {

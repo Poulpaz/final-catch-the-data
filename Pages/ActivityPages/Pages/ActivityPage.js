@@ -103,6 +103,10 @@ export default class ActivityPage extends React.Component {
     }, 3000);
   }
 
+  componentWillUpdate() {
+    console.log(this.state.denivele);
+  }
+
   setIntervalComponents = () => {
     //Calculate distance when geolocalisation change every 3s
     this.watchID = this._intervalDistance = setInterval(() => {
@@ -132,6 +136,12 @@ export default class ActivityPage extends React.Component {
         }
       );
     }, 3000);
+
+    //Calculate power and denivele every 3s
+    this._intervalPowerDenivele = setInterval(() => {
+      this._calcPowerFormula();
+      this._calcDeniveleFormula();
+    }, 3000);
   };
 
   componentDidUpdate() {
@@ -142,6 +152,7 @@ export default class ActivityPage extends React.Component {
     navigator.geolocation.clearWatch(this.watchID);
     clearInterval(this._intervalAltitudeSpeed);
     clearInterval(this._intervalDistance);
+    clearInterval(this._intervalPowerDenivele);
   }
 
   //Play button
@@ -261,6 +272,75 @@ export default class ActivityPage extends React.Component {
         console.log(error);
         console.log(res);
       });
+  };
+
+  //Function to calculate denivele
+  _calcDeniveleFormula = () => {
+    var denivele;
+    if (
+      this.state.prevAltitude != this.state.altitude &&
+      this.state.altitude > 0 &&
+      this.state.prevAltitude != 0 &&
+      this.state.altitude > this.state.prevAltitude
+    ) {
+      denivele =
+        this.state.denivele + this.state.altitude - this.state.prevAltitude;
+    } else {
+      denivele = this.state.denivele + 0;
+    }
+    this.setState({
+      denivele: denivele
+    });
+  };
+
+  //Function to calculate fullPower
+  _calcPowerFormula = () => {
+    var aeroPower = 0;
+    var heightAltitude = 0;
+    var gravityPower = 0;
+    var rollPower = 0;
+    if (this.state.altitude >= 1 && this.state.speed >= 0.01) {
+      aeroPower =
+        0.5 *
+        (1.292 *
+          ((0.085 * this.state.altitude + 760) / 760) *
+          (273 / (273 + this.state.temperature))) *
+        0.3 *
+        Math.pow((this.state.speed * 4) / 3.6, 3);
+    } else {
+      aeroPower = 0;
+    }
+    if (
+      this.state.prevAltitude != 0 &&
+      this.state.prevDistanceTravelled != 0 &&
+      this.state.speed >= 0.01 &&
+      this.state.distanceTravelled != this.state.prevDistanceTravelled
+    ) {
+      heightAltitude = this.state.altitude - this.state.prevAltitude;
+      if (heightAltitude < 0) {
+        heightAltitude = heightAltitude / -1;
+      }
+      gravityPower =
+        ((this.state.fullWeight * 9.81 * heightAltitude) /
+          ((this.state.distanceTravelled - this.state.prevDistanceTravelled) *
+            1000)) *
+        ((this.state.speed * 4) / 3.6);
+    } else {
+      gravityPower = 0;
+    }
+    if (this.state.speed >= 0.01) {
+      rollPower =
+        this.state.cr *
+        this.state.fullWeight *
+        9.81 *
+        ((this.state.speed * 4) / 3.6);
+    } else {
+      rollPower = 0;
+    }
+    var fullPower = aeroPower + gravityPower + rollPower + this.state.friction;
+    this.setState({
+      power: fullPower
+    });
   };
 
   render() {

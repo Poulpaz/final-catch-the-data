@@ -142,30 +142,17 @@ export default class ActivityPage extends React.Component {
     }, 3000);
 
     //Calculate power and denivele every 3s
-    this._intervalPowerDenivele = setInterval(() => {
+    this._intervalPower = setInterval(() => {
       this._calcPowerFormula();
+    }, 3000);
+    this._intervalDenivele = setInterval(() => {
       this._calcDeniveleFormula();
     }, 3000);
 
     //Save each dot in database every 3s
-    this._intervalSaveDataBase = setInterval(() => {
+    this._intervalSaveDistanceDots = setInterval(() => {
       const distanceDot = {
         distance: parseFloat(this.state.distanceTravelled).toFixed(3),
-        idActivity: this.state.idActivity
-      };
-
-      const altitudeDot = {
-        altitude: parseFloat(this.state.altitude).toFixed(1),
-        idActivity: this.state.idActivity
-      };
-
-      const speedDot = {
-        speed: parseFloat(this.state.speed * 4).toFixed(1),
-        idActivity: this.state.idActivity
-      };
-
-      const powerDot = {
-        power: parseFloat(this.state.power).toFixed(1),
         idActivity: this.state.idActivity
       };
 
@@ -174,28 +161,47 @@ export default class ActivityPage extends React.Component {
           prevDistanceTravelled: res.distance
         });
       });
+    }, 3000);
 
+    this._intervalSaveAltitudeDots = setInterval(() => {
+      const altitudeDot = {
+        altitude: parseFloat(this.state.altitude).toFixed(1),
+        idActivity: this.state.idActivity
+      };
       AltitudeDotModel.create(altitudeDot).then(res => {
         this.setState({
           prevAltitude: res.altitude
         });
       });
+    }, 3000);
 
-      PowerDotModel.create(powerDot);
+    this._intervalSaveSpeedDots = setInterval(() => {
+      const speedDot = {
+        speed: parseFloat(this.state.speed * 4).toFixed(1),
+        idActivity: this.state.idActivity
+      };
       SpeedDotModel.create(speedDot);
     }, 3000);
-  };
 
-  componentDidUpdate() {
-    //console.log(this.state);
-  }
+    this._intervalSavePowerDots = setInterval(() => {
+      const powerDot = {
+        power: parseFloat(this.state.power).toFixed(1),
+        idActivity: this.state.idActivity
+      };
+      PowerDotModel.create(powerDot);
+    }, 3000);
+  };
 
   componentWillUnmount() {
     navigator.geolocation.clearWatch(this.watchID);
     clearInterval(this._intervalAltitudeSpeed);
     clearInterval(this._intervalDistance);
-    clearInterval(this._intervalPowerDenivele);
-    clearInterval(this._intervalSaveDataBase);
+    clearInterval(this._intervalPower);
+    clearInterval(this._intervalDenivele);
+    clearInterval(this._intervalSaveDistanceDots);
+    clearInterval(this._intervalSaveAltitudeDots);
+    clearInterval(this._intervalSaveSpeedDots);
+    clearInterval(this._intervalSavePowerDots);
   }
 
   //Play button
@@ -407,8 +413,12 @@ export default class ActivityPage extends React.Component {
               power: 0
             });
             clearInterval(this._intervalDistance);
-            clearInterval(this._intervalPowerDenivele);
-            clearInterval(this._intervalSaveDataBase);
+            clearInterval(this._intervalPower);
+            clearInterval(this._intervalDenivele);
+            clearInterval(this._intervalSaveDistanceDots);
+            clearInterval(this._intervalSaveAltitudeDots);
+            clearInterval(this._intervalSaveSpeedDots);
+            clearInterval(this._intervalSavePowerDots);
             var totalTime = this.state.endTime - this.state.startTime;
             const activityEdit = {
               id: this.state.idActivity,

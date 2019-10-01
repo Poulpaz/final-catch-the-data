@@ -9,7 +9,7 @@
       "android",
       "web"
     ],
-    "version": "1.0.0",
+    "version": "2.1.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -24,7 +24,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "fr.equipecyclistegroupamafdj.catchthedata"
+    },
+    "android": {
+      "package": "fr.equipecyclistegroupamafdj.catchthedata"
     }
   }
 }
